@@ -274,7 +274,7 @@ class Application(tk.Tk):
         text.tag_configure('add',foreground='#126D43');text.tag_configure('remove',foreground='#B42336')
         for line in diff.splitlines(True):text.insert('end',line,'add' if line.startswith('+') else 'remove' if line.startswith('-') else '')
         text.configure(state='disabled')
-        actions=ttk.Frame(dialog,padding=12);actions.pack(fill='x')
+        actions=ttk.Frame(dialog,padding=12);actions.pack(side='bottom',fill='x',before=holder)
         ttk.Button(actions,text='返回编辑',command=dialog.destroy).pack(side='right',padx=8)
         def confirm():
             try:

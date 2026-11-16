@@ -9,6 +9,9 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from scnterm_config.app import Application
 from scnterm_config.lua_document import LuaDocument
 
+if sys.platform=='win32':
+    import ctypes
+    ctypes.windll.shcore.SetProcessDpiAwareness(1)
 root=Path(__file__).resolve().parents[1]
 work=root/'.cache/gui-smoke';work.mkdir(parents=True,exist_ok=True)
 folder=work/'config';folder.mkdir(exist_ok=True)
@@ -26,7 +29,10 @@ def descendants(widget):
 def click(label):
     buttons=[w for w in descendants(app) if w.winfo_class()=='TButton' and w.cget('text')==label]
     assert buttons,label
-    buttons[-1].invoke();app.update()
+    button=buttons[-1];assert button.winfo_ismapped(),label
+    top=button.winfo_toplevel()
+    assert button.winfo_rooty()+button.winfo_height()<=top.winfo_rooty()+top.winfo_height(),label
+    button.invoke();app.update()
 def set_field(editor,key,value):
     widget=editor.widgets[key]
     if widget.winfo_class()=='Text':widget.delete('1.0','end');widget.insert('1.0',value)
@@ -49,6 +55,8 @@ try:
     assert doc.model['rules'][-1]['patterns']==[r'\berror\b']
     assert all((folder/n).read_bytes()==b for n,b in unchanged.items())
     assert str(app.source.cget('state'))=='disabled'
+    assert app.source.get('1.0','end-1c')==(folder/'wezterm.lua').read_text(encoding='utf-8')
+    assert app.status.winfo_ismapped() and app.status.winfo_height()>10
     # 原生窗口和控件实际创建，记录布局供复查。
     app.tabs.select(0);app.update()
     if sys.platform=='win32':
