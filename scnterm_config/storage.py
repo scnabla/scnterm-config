@@ -25,8 +25,8 @@ class ConfigSession:
     def reload(self):
         if self.path.is_symlink() or not self.path.is_file():raise ConfigError('串口配置文件不存在或已替换为链接')
         if self.path.stat().st_size>LuaDocument.LIMIT:raise ConfigError('配置文件超过 2 MB')
-        self.data=self.path.read_bytes();self.document=LuaDocument(self.data)
-        self.model=deepcopy(self.document.model)
+        data=self.path.read_bytes();document=LuaDocument(data)
+        self.data=data;self.document=document;self.model=deepcopy(document.model)
 
     def preview(self):
         candidate=self.document.build(self.model)
@@ -37,7 +37,7 @@ class ConfigSession:
         return candidate,diff
 
     def _unchanged(self):
-        if self.path.is_symlink() or self.path.read_bytes()!=self.data:raise ConfigError('文件已被其他程序修改。请重新打开配置后再编辑，当前修改未写入。')
+        if self.path.is_symlink() or self.path.stat().st_size!=len(self.data) or self.path.read_bytes()!=self.data:raise ConfigError('文件已被其他程序修改。请重新打开配置后再编辑，当前修改未写入。')
 
     def _replace(self,candidate):
         temp=None
@@ -78,6 +78,7 @@ class ConfigSession:
         folder=self.path.parent/'.scnterm-config-backups'
         if backup.is_symlink() or backup.parent.is_symlink() or folder.is_symlink() or backup.parent.parent!=folder:raise ConfigError('备份位置无效')
         info=json.loads((backup.parent/'record.json').read_text(encoding='utf-8'))
+        if not isinstance(info,dict):raise ConfigError('备份记录格式无效')
         if backup.stat().st_size>LuaDocument.LIMIT:raise ConfigError('备份文件超过 2 MB')
         data=backup.read_bytes()
         if info.get('path')!=str(self.path) or info.get('before')!=digest(data):raise ConfigError('备份不属于当前配置或内容已变化')

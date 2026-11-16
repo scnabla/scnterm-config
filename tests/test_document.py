@@ -126,6 +126,15 @@ class StorageTests(unittest.TestCase):
         self.assertEqual(backup.read_bytes(),SAMPLE);self.assertEqual(self.path.read_bytes(),data)
         old,diff=self.session.restore_preview(backup);self.assertIn('1500000',diff)
         self.session.restore(backup,old);self.assertEqual(self.path.read_bytes(),SAMPLE)
+    def test_failed_reload_cannot_overwrite_external_edit(self):
+        candidate=self.changed();self.path.write_bytes(b'local broken = {')
+        with self.assertRaises(ConfigError):self.session.reload()
+        with self.assertRaises(ConfigError):self.session.save(candidate)
+        self.assertEqual(self.path.read_bytes(),b'local broken = {')
+    def test_invalid_backup_metadata_rejected(self):
+        backup=self.session.save(self.changed())
+        (backup.parent/'record.json').write_text('[]',encoding='utf-8')
+        with self.assertRaises(ConfigError):self.session.restore_preview(backup)
     def test_external_change_blocks_save(self):
         data=self.changed();self.path.write_bytes(SAMPLE+b'-- external\n')
         with self.assertRaises(ConfigError):self.session.save(data)

@@ -11,3 +11,5 @@
 Python 依赖版本固定在 requirements 文件中，Rust 的直接及间接依赖固定在 `validator/Cargo.lock`。终端程序不是本项目的构建或运行依赖。
 
 发布包的 `licenses/` 目录保留已分发组件的许可证。应用图标沿用 ScnTerm 项目的个人图标，仅复制静态资源，不引用终端代码。
+
+Tcl 8.6 的分发许可证保存在 `assets/licenses/tcl-license.terms`，来源为 [Tcl 官方仓库](https://github.com/tcltk/tcl/blob/core-8-6-branch/license.terms)。

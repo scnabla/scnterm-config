@@ -8,6 +8,7 @@ import time
 import sys
 from window_capture import capture
 
+c.windll.shcore.SetProcessDpiAwareness(1)
 root=Path(__file__).resolve().parents[1]
 package=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else root/'dist/ScnTermConfig'
 work=root/'.cache/package-smoke';work.mkdir(parents=True,exist_ok=True)

@@ -11,6 +11,8 @@ import sys
 root=Path(__file__).resolve().parents[1]
 package=root/'dist/ScnTermConfig'
 licenses=package/'licenses';licenses.mkdir(exist_ok=True)
+for source in (root/'assets/licenses').glob('*'):
+    if source.is_file():shutil.copy2(source,licenses/source.name)
 for name in ('tree-sitter','tree-sitter-lua','pyinstaller'):
     dist=importlib.metadata.distribution(name)
     for item in dist.files or []:
