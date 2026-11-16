@@ -68,7 +68,11 @@ def lua(value, indent='', newline='\n'):
         out = value.replace('\\','\\\\').replace("'","\\'")
         out = ''.join(f'\\{ord(c):03d}' if ord(c)<32 or ord(c)==127 else c for c in out)
         return "'"+out+"'"
-    if isinstance(value,list): return '{ '+', '.join(lua(x,indent,newline) for x in value)+' }'
+    if isinstance(value,list):
+        if any(isinstance(x,dict) for x in value):
+            inner=indent+'  '
+            return '{'+newline+''.join(inner+lua(x,inner,newline)+','+newline for x in value)+indent+'}'
+        return '{ '+', '.join(lua(x,indent,newline) for x in value)+' }'
     if isinstance(value,dict):
         inner=indent+'  '
         return '{'+newline+''.join(inner+k+' = '+lua(v,inner,newline)+','+newline for k,v in value.items() if not k.startswith('_'))+indent+'}'
@@ -298,7 +302,10 @@ class LuaDocument:
             entries=[]
             for row in rows:
                 identity=row.get('_id')
-                if identity is None:entries.append(lua(row,newline=self.nl)+',')
+                if identity is None:
+                    line=self.data[:node.start_byte].rsplit(b'\n',1)[-1]
+                    indent=re.match(rb'[ \t]*',line)[0].decode()+'  '
+                    entries.append(lua(row,indent,newline=self.nl)+',')
                 else:edit_record(old_ids[identity].child_by_field_name('value'),row,kind)
             insert_fields(node,entries,[f for i,f in old_ids.items() if i in ids])
         if 'ports' in self.sections:edit_list(self.sections['ports'],model['ports'],'ports')

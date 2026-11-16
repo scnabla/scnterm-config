@@ -106,6 +106,11 @@ class DocumentTests(unittest.TestCase):
     def test_terminal_reserved_name_rejected(self):
         self.model['ports'][0]['name']='local'
         with self.assertRaises(ConfigError):self.build()
+    def test_new_connection_follows_table_indentation(self):
+        self.model['ports'].append({'name':'other','port':'COM9'})
+        text=self.build().decode()
+        self.assertIn("\n    {\n      name = 'other',\n      port = 'COM9',\n    },",text)
+        self.assertIn("{ name = 'board', port = 'COM3', baud = 1500000, custom = 'keep' }, -- port comment",text)
     def test_no_execution(self):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'must-not-exist'
