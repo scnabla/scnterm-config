@@ -226,6 +226,7 @@ class LuaDocument:
                         if k in row and row[k] is not None and not isinstance(row[k],Dynamic) and row[k] not in allowed:raise ConfigError(f'{k} 的值不受支持')
                     if 'baud' in row and row['baud'] is not None and not isinstance(row['baud'],Dynamic) and not 0<row['baud']<=4294967295:raise ConfigError('波特率必须在 1 至 4294967295 之间')
                     if not row.get('name'):raise ConfigError('连接名称不能为空')
+                    if row.get('name')=='local':raise ConfigError('local 是终端保留名称，请使用其他连接名称')
                     if row.get('port')=='':raise ConfigError('端口名称不能为空')
                 if group=='logging':
                     size=row.get('max_file_size_mb')

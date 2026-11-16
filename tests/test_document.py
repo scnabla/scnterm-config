@@ -103,6 +103,9 @@ class DocumentTests(unittest.TestCase):
         raw=SAMPLE.replace(b'timestamps = true',b"timestamps = 'custom'")
         d=LuaDocument(raw);m=deepcopy(d.model);m['ports'][0]['baud']=9600
         self.assertEqual(d.build(m),raw.replace(b'1500000',b'9600'))
+    def test_terminal_reserved_name_rejected(self):
+        self.model['ports'][0]['name']='local'
+        with self.assertRaises(ConfigError):self.build()
     def test_no_execution(self):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'must-not-exist'
