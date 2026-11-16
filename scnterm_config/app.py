@@ -53,7 +53,7 @@ class Editor(ttk.Frame):
             if key=='foreground':ttk.Button(self.form,text='选色',command=self.choose_color).grid(row=row,column=2,padx=6)
             if key=='directory':ttk.Button(self.form,text='浏览',command=self.choose_directory).grid(row=row,column=2,padx=6)
         r=len(SCHEMAS[kind])
-        hint={'ports':'参数留空时沿用默认值。修改连接参数后，重新连接串口生效。',
+        hint={'ports':'留空沿用默认值；连接参数在下次连接时生效。',
               'logging':'目录留空时保存在主 Lua 旁边；相对路径也以主 Lua 所在目录为准。设置用于下一次开始记录。',
               'rules':'只改变匹配文字的颜色。靠前的规则优先；正则按原样填写，无需增加 Lua 引号或反斜杠。'}[section]
         ttk.Label(self.form,text=hint,wraplength=540,foreground='#526078').grid(row=r,column=0,columnspan=3,sticky='w',pady=12)
@@ -219,8 +219,11 @@ class Application(tk.Tk):
         holder=ttk.Frame(readonly);holder.pack(fill='both',expand=True)
         self.source=tk.Text(holder,wrap='none',state='disabled',font=('Consolas',10),bg='#FFFFFF',fg='#172033',bd=1,relief='solid')
         scroll=ttk.Scrollbar(holder,command=self.source.yview);self.source.configure(yscrollcommand=scroll.set)
-        scroll.pack(side='right',fill='y');self.source.pack(fill='both',expand=True)
-        self.status=ttk.Label(self,text='未打开配置',padding=(20,0,20,12));self.status.pack(fill='x')
+        scroll.pack(side='right',fill='y')
+        horizontal=ttk.Scrollbar(holder,orient='horizontal',command=self.source.xview)
+        self.source.configure(xscrollcommand=horizontal.set);horizontal.pack(side='bottom',fill='x')
+        self.source.pack(fill='both',expand=True)
+        self.status=ttk.Label(self,text='未打开配置',padding=(20,0,20,12));self.status.pack(side='bottom',fill='x',before=self.tabs)
         self.protocol('WM_DELETE_WINDOW',self.close)
         self.bind('<Control-s>',lambda e:self.preview_save())
         for editor in self.editors:editor.refresh()
@@ -263,7 +266,11 @@ class Application(tk.Tk):
     def diff_dialog(self,diff,save,title='确认修改'):
         dialog=tk.Toplevel(self);dialog.title(title);dialog.geometry('940x650');dialog.transient(self);dialog.grab_set()
         ttk.Label(dialog,text=('仅恢复 serial.lua；检测到外部修改时停止恢复。' if title=='确认恢复' else '仅修改 serial.lua。保存前自动备份原文件。'),padding=12).pack(fill='x')
-        text=tk.Text(dialog,wrap='none',font=('Consolas',10));text.pack(fill='both',expand=True,padx=12)
+        holder=ttk.Frame(dialog);holder.pack(fill='both',expand=True,padx=12)
+        text=tk.Text(holder,wrap='none',font=('Consolas',10))
+        vertical=ttk.Scrollbar(holder,command=text.yview);vertical.pack(side='right',fill='y')
+        horizontal=ttk.Scrollbar(holder,orient='horizontal',command=text.xview);horizontal.pack(side='bottom',fill='x')
+        text.configure(yscrollcommand=vertical.set,xscrollcommand=horizontal.set);text.pack(fill='both',expand=True)
         text.tag_configure('add',foreground='#126D43');text.tag_configure('remove',foreground='#B42336')
         for line in diff.splitlines(True):text.insert('end',line,'add' if line.startswith('+') else 'remove' if line.startswith('-') else '')
         text.configure(state='disabled')
